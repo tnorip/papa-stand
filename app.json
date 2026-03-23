@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "PAPA STAND",
+    "slug": "papa-stand",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "scheme": "com.papastand.app",
+    "android": {
+      "package": "com.papastand.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.papastand.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "9c29ee00-d435-4487-bd6b-591c5280516a"
+      }
+    },
+    "owner": "tnorip",
+    "plugins": [
+      "expo-web-browser",
+      "@react-native-google-signin/google-signin"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9c29ee00-d435-4487-bd6b-591c5280516a"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9c29ee00-d435-4487-bd6b-591c5280516a"
+    }
+  }
+}
