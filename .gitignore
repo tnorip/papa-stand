@@ -70,3 +70,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# 環境変数（APIキー）
+.env
+.env.local
+.env.production
+
+# Firebase認証ファイル
+google-services.json
+GoogleService-Info.plist
