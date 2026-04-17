@@ -51,18 +51,14 @@ export default function PostCard({ post, onPress }: Props) {
         <Text style={styles.metaText}>{timeAgo}</Text>
       </View>
       <View style={styles.reactions}>
-        {post.reactionCount > 0 && (
-          <View style={styles.pill}>
-            <CoffeeIcon size={12} color={colors.textMuted} />
-            <Text style={styles.pillText}>{post.reactionCount}</Text>
-          </View>
-        )}
-        {post.commentCount > 0 && (
-          <View style={styles.pill}>
-            <FeedIcon size={12} color={colors.textMuted} />
-            <Text style={styles.pillText}>{post.commentCount}</Text>
-          </View>
-        )}
+        <View style={styles.pill}>
+          <CoffeeIcon size={12} color={colors.textMuted} />
+          <Text style={styles.pillText}>{post.reactionCount}</Text>
+        </View>
+        <View style={styles.pill}>
+          <FeedIcon size={12} color={colors.textMuted} />
+          <Text style={styles.pillText}>{post.commentCount}</Text>
+        </View>
       </View>
     </TouchableOpacity>
   )

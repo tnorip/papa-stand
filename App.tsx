@@ -2,11 +2,11 @@
 // PAPA STAND - App.tsx（オリジナルアイコン版）
 // ============================================================
 
-import React, { useState } from 'react'
-import { View, StyleSheet, ActivityIndicator } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import { View, StyleSheet, ActivityIndicator, Animated } from 'react-native'
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import { TouchableOpacity, Text } from 'react-native'
-import { colors, spacing, fontSize, fontWeight } from './src/config/theme'
+import { colors, spacing, radius, fontSize, fontWeight } from './src/config/theme'
 import { useAuth } from './src/hooks/useAuth'
 import { UserProfile } from './src/types'
 import { HomeIcon, FeedIcon, EventIcon, ProfileIcon } from './src/components/Icons'
@@ -77,6 +77,41 @@ const navStyles = StyleSheet.create({
 })
 
 // ============================================================
+// トースト通知
+// ============================================================
+function Toast({ message }: { message: string }) {
+  const opacity = useRef(new Animated.Value(0)).current
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+      Animated.delay(1400),
+      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start()
+  }, [])
+
+  return (
+    <Animated.View style={[toastStyles.container, { opacity }]}>
+      <Text style={toastStyles.text}>{message}</Text>
+    </Animated.View>
+  )
+}
+
+const toastStyles = StyleSheet.create({
+  container: {
+    position: 'absolute',
+    top: 48,
+    alignSelf: 'center',
+    backgroundColor: colors.navy,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.full,
+    zIndex: 1000,
+  },
+  text: { color: colors.white, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
+})
+
+// ============================================================
 // メインアプリ
 // ============================================================
 function MainApp({ profile: initialProfile, onSignOut }: {
@@ -86,6 +121,14 @@ function MainApp({ profile: initialProfile, onSignOut }: {
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [subScreen, setSubScreen] = useState<SubScreen>({ name: 'none' })
   const [profile, setProfile] = useState<UserProfile>(initialProfile)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const showToast = (msg: string) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    setToastMessage(msg)
+    toastTimer.current = setTimeout(() => setToastMessage(null), 2000)
+  }
 
   const goSub = (s: SubScreen) => setSubScreen(s)
   const closeSub = () => setSubScreen({ name: 'none' })
@@ -110,7 +153,7 @@ function MainApp({ profile: initialProfile, onSignOut }: {
       return (
         <CreatePostScreen
           profile={profile}
-          onComplete={closeSub}
+          onComplete={() => { closeSub(); showToast('投稿しました ☕') }}
           onGoBack={closeSub}
         />
       )
@@ -187,6 +230,7 @@ function MainApp({ profile: initialProfile, onSignOut }: {
           {renderTab()}
         </View>
         {sub && <View style={styles.screen}>{sub}</View>}
+        {toastMessage && <Toast message={toastMessage} />}
       </View>
       <BottomNav activeTab={activeTab} onPress={handleTabPress} />
     </SafeAreaView>

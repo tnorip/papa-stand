@@ -50,7 +50,7 @@ export default function CreatePostScreen({ profile, onComplete, onGoBack }: Prop
         prefecture: profile.prefecture, area: profile.area,
         childAgeGroup: ageTag, tags: [],
       })
-      Alert.alert('投稿しました！', '近くのパパに届きます ☕', [{ text: 'OK', onPress: onComplete }])
+      onComplete()
     } catch {
       Alert.alert('エラー', '投稿に失敗しました。もう一度お試しください。')
     } finally {
