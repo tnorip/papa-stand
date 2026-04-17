@@ -9,7 +9,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
-import { usePost, useComments, useReaction, sendReaction, addComment } from '../hooks/usePosts'
+import { usePost, useComments, useReaction, sendReaction, addComment, deletePost } from '../hooks/usePosts'
 import { POST_TYPE_LABELS, ReactionType } from '../types'
 import { BackIcon, CoffeeIcon, HeartIcon, ClapIcon, LeafIcon, SendIcon } from '../components/Icons'
 
@@ -44,9 +44,28 @@ export default function PostDetailScreen({ postId, userId, userDisplayName, onGo
   const myReaction = useReaction(postId, userId)
   const [commentText, setCommentText] = useState('')
   const [sending, setSending] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleReaction = async (type: ReactionType) => {
     await sendReaction(postId, userId, type)
+  }
+
+  const handleDelete = () => {
+    Alert.alert('投稿を削除しますか？', 'この操作は元に戻せません。', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除する', style: 'destructive', onPress: async () => {
+          try {
+            setDeleting(true)
+            await deletePost(postId)
+            onGoBack()
+          } catch {
+            Alert.alert('エラー', '削除に失敗しました。もう一度お試しください。')
+            setDeleting(false)
+          }
+        },
+      },
+    ])
   }
 
   const handleComment = async () => {
@@ -80,10 +99,17 @@ export default function PostDetailScreen({ postId, userId, userDisplayName, onGo
     <SafeAreaView style={styles.container}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onGoBack} style={styles.backBtn}>
-          <BackIcon size={20} color="rgba(255,255,255,0.7)" />
-          <Text style={styles.backBtnText}>戻る</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={onGoBack} style={styles.backBtn}>
+            <BackIcon size={20} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.backBtnText}>戻る</Text>
+          </TouchableOpacity>
+          {userId === post.authorId && (
+            <TouchableOpacity onPress={handleDelete} disabled={deleting} style={styles.deleteBtn}>
+              <Text style={styles.deleteBtnText}>{deleting ? '削除中…' : '削除'}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={[styles.badge, { backgroundColor: typeStyle.bg }]}>
           <Text style={[styles.badgeText, { color: typeStyle.text }]}>
             {POST_TYPE_LABELS[post.type]}
@@ -185,8 +211,11 @@ function ProfileAvatar({ size }: { size: number }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.beige },
   header: { backgroundColor: colors.navy, padding: spacing.lg },
-  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.sm },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   backBtnText: { color: 'rgba(255,255,255,0.6)', fontSize: fontSize.sm },
+  deleteBtn: { paddingVertical: 4, paddingHorizontal: spacing.sm },
+  deleteBtnText: { color: '#ff6b6b', fontSize: fontSize.sm, fontWeight: fontWeight.bold },
   badge: {
     alignSelf: 'flex-start', paddingVertical: 2, paddingHorizontal: spacing.sm,
     borderRadius: radius.full, marginBottom: spacing.sm,
