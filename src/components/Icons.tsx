@@ -231,3 +231,13 @@ export function CameraIcon({ size = 24, color = '#6b6b6b', strokeWidth = 1.8 }: 
     </Svg>
   )
 }
+
+// ブックマーク（保存）
+export function BookmarkIcon({ size = 24, color = '#1a2744', strokeWidth = 1.8, filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z"
+        stroke={color} strokeWidth={strokeWidth} strokeLinejoin="round" />
+    </Svg>
+  )
+}

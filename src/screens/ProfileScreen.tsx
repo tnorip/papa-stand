@@ -12,7 +12,7 @@ import { doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../config/firebase'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
 import { UserProfile, CHILD_AGE_GROUP_LABELS, ChildInfo } from '../types'
-import { usePosts } from '../hooks/usePosts'
+import { usePosts, useSavedPosts } from '../hooks/usePosts'
 import PostCard from '../components/PostCard'
 import { Avatar, AvatarPicker, AvatarId } from '../components/Avatars'
 import { EditIcon } from '../components/Icons'
@@ -42,6 +42,7 @@ export default function ProfileScreen({
 
   const { posts } = usePosts()
   const myPosts = posts.filter((p) => p.authorId === profile.uid).slice(0, 5)
+  const { posts: savedPosts, loading: savedLoading } = useSavedPosts(profile.uid)
 
   // 子ども情報（後方互換）
   const children: ChildInfo[] = profile.children?.length
@@ -183,10 +184,24 @@ export default function ProfileScreen({
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>直近の投稿</Text>
             {myPosts.map((post) => (
-              <PostCard key={post.postId} post={post} onPress={() => onGoToPost(post.postId)} />
+              <PostCard key={post.postId} post={post} userId={profile.uid} onPress={() => onGoToPost(post.postId)} />
             ))}
           </View>
         )}
+
+        {/* 保存した投稿 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>保存した投稿</Text>
+          {savedLoading ? (
+            <ActivityIndicator color={colors.orange} style={{ marginTop: spacing.sm }} />
+          ) : savedPosts.length === 0 ? (
+            <Text style={styles.emptyText}>保存した投稿はありません</Text>
+          ) : (
+            savedPosts.map((post) => (
+              <PostCard key={post.postId} post={post} userId={profile.uid} onPress={() => onGoToPost(post.postId)} />
+            ))
+          )}
+        </View>
 
         {/* メニュー */}
         <View style={styles.menuSection}>

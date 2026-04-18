@@ -1,16 +1,18 @@
 // ============================================================
-// PAPA STAND - 投稿カード（オリジナルアイコン版）
+// PAPA STAND - 投稿カード
 // ============================================================
 
 import React from 'react'
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { Post, POST_TYPE_LABELS } from '../types'
+import { Post, POST_TYPE_LABELS, CHILD_AGE_GROUP_LABELS } from '../types'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
-import { StruggleIcon, QuestionIcon, WinIcon, ShareIcon, CoffeeIcon, FeedIcon } from './Icons'
+import { StruggleIcon, QuestionIcon, WinIcon, ShareIcon, CoffeeIcon, FeedIcon, BookmarkIcon } from './Icons'
+import { useSavedPost, toggleSavedPost } from '../hooks/usePosts'
 
 type Props = {
   post: Post
   onPress: () => void
+  userId: string
 }
 
 const TYPE_STYLES: Record<string, { bg: string; text: string }> = {
@@ -30,34 +32,53 @@ function TypeIcon({ type, size = 14 }: { type: string; size?: number }) {
   }
 }
 
-export default function PostCard({ post, onPress }: Props) {
+export default function PostCard({ post, onPress, userId }: Props) {
   const typeStyle = TYPE_STYLES[post.type] ?? TYPE_STYLES.share
   const timeAgo = formatTimeAgo(post.createdAt)
+  const isSaved = useSavedPost(post.postId, userId)
+
+  const handleSave = async () => {
+    await toggleSavedPost(post.postId, userId)
+  }
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
+      {/* 1. カテゴリバッジ */}
       <View style={[styles.badge, { backgroundColor: typeStyle.bg }]}>
         <TypeIcon type={post.type} size={13} />
         <Text style={[styles.badgeText, { color: typeStyle.text }]}>
           {POST_TYPE_LABELS[post.type]}
         </Text>
       </View>
-      <Text style={styles.text} numberOfLines={3}>{post.text}</Text>
-      <View style={styles.meta}>
-        <Text style={styles.metaText}>{post.authorDisplayName}</Text>
+
+      {/* 2. 投稿者名 */}
+      <Text style={styles.authorName}>{post.authorDisplayName}</Text>
+
+      {/* 3. 居住地・月齢 */}
+      <View style={styles.infoRow}>
+        <Text style={styles.infoText}>{post.area}</Text>
         <Text style={styles.dot}>·</Text>
-        <Text style={styles.metaText}>{post.area}</Text>
-        <Text style={styles.dot}>·</Text>
-        <Text style={styles.metaText}>{timeAgo}</Text>
+        <Text style={styles.infoText}>{CHILD_AGE_GROUP_LABELS[post.childAgeGroup]}</Text>
       </View>
-      <View style={styles.reactions}>
-        <View style={styles.pill}>
-          <CoffeeIcon size={12} color={colors.textMuted} />
-          <Text style={styles.pillText}>{post.reactionCount}</Text>
-        </View>
-        <View style={styles.pill}>
-          <FeedIcon size={12} color={colors.textMuted} />
-          <Text style={styles.pillText}>{post.commentCount}</Text>
+
+      {/* 4. 投稿内容 */}
+      <Text style={styles.text} numberOfLines={3}>{post.text}</Text>
+
+      {/* 5. フッター: 時間 + アクション */}
+      <View style={styles.footer}>
+        <Text style={styles.timeText}>{timeAgo}</Text>
+        <View style={styles.actions}>
+          <View style={styles.pill}>
+            <CoffeeIcon size={12} color={colors.textMuted} />
+            <Text style={styles.pillText}>{post.reactionCount}</Text>
+          </View>
+          <View style={styles.pill}>
+            <FeedIcon size={12} color={colors.textMuted} />
+            <Text style={styles.pillText}>{post.commentCount}</Text>
+          </View>
+          <TouchableOpacity onPress={handleSave} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <BookmarkIcon size={16} color={isSaved ? colors.navy : colors.textMuted} filled={isSaved} />
+          </TouchableOpacity>
         </View>
       </View>
     </TouchableOpacity>
@@ -83,14 +104,17 @@ const styles = StyleSheet.create({
   badge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     alignSelf: 'flex-start', paddingVertical: 3, paddingHorizontal: spacing.sm,
-    borderRadius: radius.full, marginBottom: spacing.sm,
+    borderRadius: radius.full, marginBottom: spacing.xs,
   },
   badgeText: { fontSize: fontSize.xs, fontWeight: fontWeight.bold },
-  text: { fontSize: fontSize.sm, color: colors.text, lineHeight: 20, marginBottom: spacing.sm },
-  meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 4 },
-  metaText: { fontSize: fontSize.xs, color: colors.textMuted },
+  authorName: { fontSize: fontSize.sm, fontWeight: fontWeight.bold, color: colors.text, marginBottom: 2 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.sm },
+  infoText: { fontSize: fontSize.xs, color: colors.textMuted },
   dot: { fontSize: fontSize.xs, color: colors.beigeDeep },
-  reactions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  text: { fontSize: fontSize.sm, color: colors.text, lineHeight: 20, marginBottom: spacing.sm },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  timeText: { fontSize: fontSize.xs, color: colors.textMuted },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   pill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingVertical: 2, paddingHorizontal: spacing.sm, borderRadius: radius.full,
