@@ -5,7 +5,7 @@
 import React, { useState } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
@@ -15,6 +15,7 @@ import PostCard from '../components/PostCard'
 import { PlusIcon } from '../components/Icons'
 
 type Props = {
+  userId: string
   onGoToPost: (postId: string) => void
   onGoToCreate: () => void
   onGoBack: () => void
@@ -28,9 +29,14 @@ const FILTERS: { label: string; value: PostType | null }[] = [
   { label: '共有',     value: 'share' },
 ]
 
-export default function FeedScreen({ onGoToPost, onGoToCreate, onGoBack }: Props) {
+export default function FeedScreen({ userId, onGoToPost, onGoToCreate, onGoBack }: Props) {
   const [filter, setFilter] = useState<PostType | null>(null)
   const { posts, loading } = usePosts(filter ?? undefined)
+  const [refreshing, setRefreshing] = useState(false)
+  const onRefresh = () => {
+    setRefreshing(true)
+    setTimeout(() => setRefreshing(false), 800)
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -60,7 +66,13 @@ export default function FeedScreen({ onGoToPost, onGoToCreate, onGoBack }: Props
       </View>
 
       {/* 投稿一覧 */}
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.orange} colors={[colors.orange]} />
+        }
+      >
         {loading ? (
           <ActivityIndicator color={colors.orange} style={{ marginTop: spacing.xxl }} />
         ) : posts.length === 0 ? (
@@ -69,7 +81,7 @@ export default function FeedScreen({ onGoToPost, onGoToCreate, onGoBack }: Props
           </View>
         ) : (
           posts.map((post) => (
-            <PostCard key={post.postId} post={post} onPress={() => onGoToPost(post.postId)} />
+            <PostCard key={post.postId} post={post} userId={userId} onPress={() => onGoToPost(post.postId)} />
           ))
         )}
         <View style={{ height: 80 }} />

@@ -151,6 +151,55 @@ export async function addComment(postId: string, params: {
 }
 
 // ============================================================
+// 保存（ブックマーク）
+// ============================================================
+export function useSavedPost(postId: string, userId: string) {
+  const [isSaved, setIsSaved] = useState(false)
+  useEffect(() => {
+    if (!userId || !postId) return
+    const unsubscribe = onSnapshot(
+      doc(db, 'users', userId, 'savedPosts', postId),
+      (snap) => setIsSaved(snap.exists())
+    )
+    return unsubscribe
+  }, [postId, userId])
+  return isSaved
+}
+
+export function useSavedPosts(userId: string) {
+  const [posts, setPosts] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    if (!userId) return
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'users', userId, 'savedPosts'), orderBy('savedAt', 'desc')),
+      async (snap) => {
+        if (snap.empty) { setPosts([]); setLoading(false); return }
+        const fetched = await Promise.all(snap.docs.map(d => getDoc(doc(db, 'posts', d.id))))
+        setPosts(
+          fetched
+            .filter(d => d.exists() && !d.data()?.deleted)
+            .map(d => ({ postId: d.id, ...d.data() } as Post))
+        )
+        setLoading(false)
+      }
+    )
+    return unsubscribe
+  }, [userId])
+  return { posts, loading }
+}
+
+export async function toggleSavedPost(postId: string, userId: string) {
+  const ref = doc(db, 'users', userId, 'savedPosts', postId)
+  const snap = await getDoc(ref)
+  if (snap.exists()) {
+    await deleteDoc(ref)
+  } else {
+    await setDoc(ref, { postId, savedAt: serverTimestamp() })
+  }
+}
+
+// ============================================================
 // リアクション取得
 // ============================================================
 export function useReaction(postId: string, userId: string) {

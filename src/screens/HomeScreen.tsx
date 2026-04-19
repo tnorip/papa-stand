@@ -5,7 +5,7 @@
 import React, { useState } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Modal,
+  StyleSheet, ActivityIndicator, Modal, RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
@@ -36,6 +36,8 @@ export default function HomeScreen({
   const { posts, loading } = usePosts()
   const recentPosts = posts.slice(0, 3)
   const [menuVisible, setMenuVisible] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  const onRefresh = () => { setRefreshing(true); setTimeout(() => setRefreshing(false), 800) }
 
   const today = new Date()
   const dateStr = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`
@@ -69,7 +71,11 @@ export default function HomeScreen({
         </TouchableOpacity>
       </Modal>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.orange} colors={[colors.orange]} />}
+      >
         <View style={styles.section}>
           {/* グリーティングカード */}
           <View style={styles.greetingCard}>
@@ -112,7 +118,7 @@ export default function HomeScreen({
             </View>
           ) : (
             recentPosts.map((post) => (
-              <PostCard key={post.postId} post={post} onPress={() => onGoToPost(post.postId)} />
+              <PostCard key={post.postId} post={post} userId={userId} onPress={() => onGoToPost(post.postId)} />
             ))
           )}
         </View>

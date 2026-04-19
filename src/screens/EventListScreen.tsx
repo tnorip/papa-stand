@@ -2,10 +2,10 @@
 // PAPA STAND - イベント一覧画面（ヘッダー統一・←ボタン削除版）
 // ============================================================
 
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator,
+  StyleSheet, ActivityIndicator, RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
@@ -63,6 +63,8 @@ function EventCard({ event, onPress }: { event: Event; onPress: () => void }) {
 
 export default function EventListScreen({ onGoToEvent, onGoBack }: Props) {
   const { events, loading } = useEvents()
+  const [refreshing, setRefreshing] = useState(false)
+  const onRefresh = () => { setRefreshing(true); setTimeout(() => setRefreshing(false), 800) }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -74,7 +76,11 @@ export default function EventListScreen({ onGoToEvent, onGoBack }: Props) {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.orange} colors={[colors.orange]} />}
+      >
         {loading ? (
           <ActivityIndicator color={colors.orange} style={{ marginTop: spacing.xxl }} />
         ) : events.length === 0 ? (

@@ -100,15 +100,20 @@ function Toast({ message }: { message: string }) {
 const toastStyles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 48,
+    top: '35%',
     alignSelf: 'center',
     backgroundColor: colors.navy,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
     borderRadius: radius.full,
     zIndex: 1000,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
-  text: { color: colors.white, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
+  text: { color: colors.white, fontSize: fontSize.md, fontWeight: fontWeight.bold },
 })
 
 // ============================================================
@@ -196,6 +201,7 @@ function MainApp({ profile: initialProfile, onSignOut }: {
       case 'feed':
         return (
           <FeedScreen
+            userId={profile.uid}
             onGoToPost={(postId) => goSub({ name: 'post_detail', postId })}
             onGoToCreate={() => goSub({ name: 'create_post' })}
             onGoBack={() => handleTabPress('home')}
