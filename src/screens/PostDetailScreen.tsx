@@ -5,7 +5,7 @@
 import React, { useState } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, TextInput, ActivityIndicator, Alert,
+  StyleSheet, TextInput, ActivityIndicator, Alert, Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { colors, spacing, radius, fontSize, fontWeight } from '../config/theme'
@@ -38,6 +38,7 @@ export default function PostDetailScreen({ postId, userId, userDisplayName, onGo
   const [commentText, setCommentText] = useState('')
   const [sending, setSending] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleReaction = async () => {
     await sendReaction(postId, userId, 'wakaru')
@@ -47,22 +48,18 @@ export default function PostDetailScreen({ postId, userId, userDisplayName, onGo
     await toggleSavedPost(postId, userId)
   }
 
-  const handleDelete = () => {
-    Alert.alert('投稿を削除しますか？', 'この操作は元に戻せません。', [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '削除する', style: 'destructive', onPress: async () => {
-          try {
-            setDeleting(true)
-            await deletePost(postId)
-            onGoBack()
-          } catch {
-            Alert.alert('エラー', '削除に失敗しました。もう一度お試しください。')
-            setDeleting(false)
-          }
-        },
-      },
-    ])
+  const handleDelete = () => setShowDeleteConfirm(true)
+
+  const confirmDelete = async () => {
+    try {
+      setDeleting(true)
+      setShowDeleteConfirm(false)
+      await deletePost(postId)
+      onGoBack()
+    } catch {
+      setDeleting(false)
+      Alert.alert('エラー', '削除に失敗しました。もう一度お試しください。')
+    }
   }
 
   const handleComment = async () => {
@@ -182,6 +179,34 @@ export default function PostDetailScreen({ postId, userId, userDisplayName, onGo
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
 
+      {/* 削除確認モーダル */}
+      <Modal visible={showDeleteConfirm} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>投稿を削除しますか？</Text>
+            <Text style={styles.modalBody}>この操作は元に戻せません。</Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancelBtn}
+                onPress={() => setShowDeleteConfirm(false)}
+              >
+                <Text style={styles.modalCancelText}>キャンセル</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalDeleteBtn}
+                onPress={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting
+                  ? <ActivityIndicator color={colors.white} size="small" />
+                  : <Text style={styles.modalDeleteText}>削除する</Text>
+                }
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* コメント入力 */}
       <View style={styles.inputBar}>
         <TextInput
@@ -296,4 +321,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.orange, justifyContent: 'center', alignItems: 'center',
   },
   sendBtnDisabled: { backgroundColor: colors.border },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  modalSheet: { backgroundColor: colors.white, borderRadius: radius.lg, padding: spacing.xl, width: '100%', maxWidth: 360 },
+  modalTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text, marginBottom: spacing.sm },
+  modalBody: { fontSize: fontSize.sm, color: colors.textMuted, marginBottom: spacing.xl },
+  modalActions: { flexDirection: 'row', gap: spacing.sm },
+  modalCancelBtn: { flex: 1, paddingVertical: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, alignItems: 'center' },
+  modalCancelText: { fontSize: fontSize.md, color: colors.text, fontWeight: fontWeight.medium },
+  modalDeleteBtn: { flex: 1, paddingVertical: spacing.md, borderRadius: radius.md, backgroundColor: '#e53935', alignItems: 'center' },
+  modalDeleteText: { fontSize: fontSize.md, color: colors.white, fontWeight: fontWeight.bold },
 })
